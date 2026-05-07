@@ -167,10 +167,21 @@ transactionRouter.post('/transfer', async (req: Request, res: Response, next: Ne
       return
     }
 
-    const toAccount = await prisma.account.findFirst({
-      where: { iban: { contains: normalizedIban.slice(-20) } },
-      include: { user: true },
-    })
+    // Recherche multi-stratégie : IBAN normalisé, IBAN avec espaces, ou fin d'IBAN
+    const toAccount =
+      (await prisma.account.findFirst({
+        where: { iban: { equals: normalizedIban } },
+        include: { user: true },
+      })) ||
+      (await prisma.account.findFirst({
+        where: { iban: { equals: data.toIban } },
+        include: { user: true },
+      })) ||
+      (await prisma.account.findFirst({
+        where: { iban: { endsWith: normalizedIban.slice(-20) } },
+        include: { user: true },
+      }))
+
     if (!toAccount) {
       res.status(404).json({ success: false, message: 'Destination IBAN not found' })
       return
