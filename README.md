@@ -1,6 +1,3 @@
-Voici le README amélioré avec une image d'illustration et une présentation plus soignée :
-
-```markdown
 <p align="center">
   <img src="https://img.shields.io/badge/status-active-success?style=flat-square" alt="Status" />
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License" />
@@ -56,6 +53,27 @@ Adullam Bank incarne cette philosophie. Nous construisons une banque qui ne vous
 | **Succès** | `#22C55E` • **Erreur** : `#F43F5E` • **Avertissement** : `#F59E0B` |
 
 ---
+
+## 🚀 Démarrage Rapide (Docker)
+
+```bash
+# 1. Cloner et configurer l'environnement
+git clone <repo>
+cd adullam-bank
+cp .env.example .env
+
+# 2. Générer des secrets JWT sécurisés
+openssl rand -hex 64  # coller comme JWT_ACCESS_SECRET
+openssl rand -hex 64  # coller comme JWT_REFRESH_SECRET
+
+# 3. Lancer tous les services
+docker compose up -d
+
+# 4. Exécuter les migrations + seed (première fois seulement)
+docker compose exec backend sh -c "npx prisma migrate deploy && tsx prisma/seed.ts"
+
+# 5. Ouvrir le navigateur
+open http://localhost
 
 ## 🚀 Démarrage Rapide (Docker)
 
