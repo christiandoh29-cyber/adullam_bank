@@ -1,0 +1,24 @@
+{
+  "name": "adullam-bank",
+  "version": "1.0.0",
+  "description": "A full-stack digital banking platform built with React, Express, PostgreSQL, and Redis. Inspired by the design language of [adullam.dev](https://adullam.dev) — dark navy + electric purple palette, Poppins font, modern fintech aesthetics.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^25.6.0",
+    "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}

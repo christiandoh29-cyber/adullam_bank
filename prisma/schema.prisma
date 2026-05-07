@@ -1,0 +1,153 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum CardStatus {
+  ACTIVE
+  BLOCKED
+  EXPIRED
+  CANCELLED
+}
+
+enum CardNetwork {
+  VISA
+  MASTERCARD
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER_SENT
+  TRANSFER_RECEIVED
+  FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum DepositStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String
+  firstName         String
+  lastName          String
+  phone             String?
+  role              Role      @default(USER)
+  isEmailVerified   Boolean   @default(false)
+  emailVerifyToken  String?
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  accounts          Account[]
+  depositRequests   DepositRequest[]
+
+  @@map("users")
+}
+
+model Account {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountNumber   String        @unique
+  bankCode        String        @default("30006")
+  branchCode      String        @default("00001")
+  ribKey          String
+  iban            String        @unique
+  balance         Decimal       @default(0) @db.Decimal(18, 2)
+  currency        String        @default("EUR")
+  status          AccountStatus @default(ACTIVE)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  cards                   Card[]
+  sentTransactions        Transaction[] @relation("SentTransactions")
+  receivedTransactions    Transaction[] @relation("ReceivedTransactions")
+
+  @@map("accounts")
+}
+
+model Card {
+  id              String      @id @default(cuid())
+  accountId       String
+  account         Account     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  cardNumber      String      @unique
+  cardHolder      String
+  expiryMonth     Int
+  expiryYear      Int
+  cvv             String
+  network         CardNetwork @default(VISA)
+  status          CardStatus  @default(ACTIVE)
+  dailyLimit      Decimal     @default(500)   @db.Decimal(18, 2)
+  monthlyLimit    Decimal     @default(3000)  @db.Decimal(18, 2)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@map("cards")
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  reference       String            @unique
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  amount          Decimal           @db.Decimal(18, 2)
+  fee             Decimal           @default(0) @db.Decimal(18, 2)
+  currency        String            @default("EUR")
+  description     String?
+  metadata        Json?
+
+  fromAccountId   String?
+  fromAccount     Account?  @relation("SentTransactions", fields: [fromAccountId], references: [id])
+  toAccountId     String?
+  toAccount       Account?  @relation("ReceivedTransactions", fields: [toAccountId], references: [id])
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("transactions")
+}
+
+model DepositRequest {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Decimal       @db.Decimal(18, 2)
+  currency    String        @default("EUR")
+  status      DepositStatus @default(PENDING)
+  note        String?
+  adminNote   String?
+  processedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("deposit_requests")
+}
