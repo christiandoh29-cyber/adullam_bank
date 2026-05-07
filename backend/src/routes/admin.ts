@@ -1,11 +1,11 @@
 // src/routes/admin.ts
 import { Router, Request, Response, NextFunction } from 'express'
 import { z } from 'zod'
-import { Decimal } from '@prisma/client/runtime/library'
 import { prisma } from '../lib/prisma'
 import { authenticate, requireAdmin } from '../middleware/auth'
 import { generateTransactionReference } from '../lib/banking'
 import { sendDepositApprovedEmail } from '../lib/mailer'
+import { notifyDepositApproved, notifyDepositRejected } from '../lib/notifications'
 
 export const adminRouter = Router()
 adminRouter.use(authenticate, requireAdmin)
@@ -31,8 +31,18 @@ adminRouter.get('/stats', async (_req: Request, res: Response, next: NextFunctio
       orderBy: { createdAt: 'desc' },
       take: 5,
       include: {
-        fromAccount: { include: { user: { select: { firstName: true, lastName: true } } } },
-        toAccount: { include: { user: { select: { firstName: true, lastName: true } } } },
+        fromAccount: {
+          select: {
+            iban: true,
+            user: { select: { firstName: true, lastName: true } },
+          },
+        },
+        toAccount: {
+          select: {
+            iban: true,
+            user: { select: { firstName: true, lastName: true } },
+          },
+        },
       },
     })
 
@@ -228,12 +238,19 @@ adminRouter.post('/deposits/:id/approve', async (req: Request, res: Response, ne
       }),
     ])
 
-    sendDepositApprovedEmail(
-      deposit.user.email,
-      deposit.user.firstName,
-      Number(deposit.amount),
-      deposit.currency
-    ).catch(console.error)
+    Promise.all([
+      sendDepositApprovedEmail(
+        deposit.user.email,
+        deposit.user.firstName,
+        Number(deposit.amount),
+        deposit.currency
+      ),
+      notifyDepositApproved(
+        deposit.user.id,
+        Number(deposit.amount),
+        deposit.currency
+      ),
+    ]).catch((err) => console.error('Deposit notification error:', err))
 
     res.json({ success: true, message: 'Deposit approved and funds credited' })
   } catch (err) {
@@ -261,6 +278,13 @@ adminRouter.post('/deposits/:id/reject', async (req: Request, res: Response, nex
       data: { status: 'REJECTED', adminNote, processedAt: new Date() },
     })
 
+    notifyDepositRejected(
+      deposit.userId,
+      Number(deposit.amount),
+      deposit.currency,
+      adminNote ?? undefined
+    ).catch((err) => console.error('Deposit rejection notification error:', err))
+
     res.json({ success: true, message: 'Deposit rejected' })
   } catch (err) {
     next(err)
@@ -282,8 +306,20 @@ adminRouter.get('/transactions', async (req: Request, res: Response, next: NextF
       prisma.transaction.findMany({
         where,
         include: {
-          fromAccount: { include: { user: { select: { firstName: true, lastName: true, email: true } } } },
-          toAccount: { include: { user: { select: { firstName: true, lastName: true, email: true } } } },
+          fromAccount: {
+            select: {
+              iban: true,
+              accountNumber: true,
+              user: { select: { id: true, firstName: true, lastName: true, email: true } },
+            },
+          },
+          toAccount: {
+            select: {
+              iban: true,
+              accountNumber: true,
+              user: { select: { id: true, firstName: true, lastName: true, email: true } },
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip: (pageNum - 1) * limitNum,

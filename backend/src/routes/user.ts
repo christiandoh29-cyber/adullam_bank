@@ -2,8 +2,14 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
+import multer from 'multer'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../middleware/auth'
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 500 * 1024 },
+})
 
 export const userRouter = Router()
 userRouter.use(authenticate)
@@ -26,9 +32,46 @@ userRouter.put('/profile', async (req: Request, res: Response, next: NextFunctio
     const user = await prisma.user.update({
       where: { id: req.user!.userId },
       data,
-      select: { id: true, email: true, firstName: true, lastName: true, phone: true },
+      select: { id: true, email: true, firstName: true, lastName: true, phone: true, profilePicture: true },
     })
     res.json({ success: true, user })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// POST /api/users/profile-picture
+userRouter.post('/profile-picture', authenticate, upload.single('picture'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ success: false, message: 'No file uploaded' })
+      return
+    }
+    if (!req.file.mimetype.startsWith('image/')) {
+      res.status(400).json({ success: false, message: 'Only image files are allowed' })
+      return
+    }
+
+    const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`
+    const user = await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { profilePicture: base64 },
+      select: { id: true, profilePicture: true },
+    })
+    res.json({ success: true, profilePicture: user.profilePicture })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// DELETE /api/users/profile-picture
+userRouter.delete('/profile-picture', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { profilePicture: null },
+    })
+    res.json({ success: true })
   } catch (err) {
     next(err)
   }

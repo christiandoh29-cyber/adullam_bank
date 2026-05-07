@@ -12,13 +12,14 @@ import { cardRouter } from './routes/card'
 import { transactionRouter } from './routes/transaction'
 import { adminRouter } from './routes/admin'
 import { userRouter } from './routes/user'
+import { notificationRouter } from './routes/notification'
 import { errorHandler } from './middleware/error'
 import { prisma } from './lib/prisma'
 import { redis } from './lib/redis'
 
 const app = express()
 const PORT = process.env.PORT || 3998
-const APP_URL = process.env.APP_URL || 'http://localhost:'
+const APP_URL = process.env.APP_URL || 'http://localhost'
 
 // Security middleware
 app.use(helmet({ contentSecurityPolicy: false }))
@@ -42,7 +43,7 @@ app.get('/api/health', async (_req, res) => {
     await prisma.$queryRaw`SELECT 1`
     await redis.ping()
     res.json({ status: 'ok', timestamp: new Date().toISOString(), service: 'Adullam Bank API' })
-  } catch (error) {
+  } catch {
     res.status(503).json({ status: 'error', message: 'Service unavailable' })
   }
 })
@@ -54,6 +55,7 @@ app.use('/api/cards', cardRouter)
 app.use('/api/transactions', transactionRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/users', userRouter)
+app.use('/api/notifications', notificationRouter)
 
 // 404
 app.use((_req, res) => {

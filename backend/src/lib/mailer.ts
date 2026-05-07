@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
 })
 
 const FROM = process.env.SMTP_FROM || 'Adullam Bank <christiandoh29@gmail.com>'
-const APP_URL = process.env.APP_URL || 'http://localhost:3999'
+const APP_URL = process.env.APP_URL || 'http://localhost'
 
 function baseTemplate(content: string): string {
   return `

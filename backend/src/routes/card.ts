@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { authenticate } from '../middleware/auth'
 import { generateCardNumber, generateCVV, generateCardExpiry } from '../lib/banking'
+import { notifyCardCreated, notifyCardBlocked } from '../lib/notifications'
 
 export const cardRouter = Router()
 cardRouter.use(authenticate)
@@ -50,7 +51,7 @@ cardRouter.post('/create', async (req: Request, res: Response, next: NextFunctio
     const card = await prisma.card.create({
       data: {
         accountId: account.id,
-        cardNumber: generateCardNumber('5425'), // Mastercard BIN
+        cardNumber: generateCardNumber('5425'),
         cardHolder: `${user.firstName.toUpperCase()} ${user.lastName.toUpperCase()}`,
         expiryMonth: expiry.month,
         expiryYear: expiry.year,
@@ -58,6 +59,7 @@ cardRouter.post('/create', async (req: Request, res: Response, next: NextFunctio
         network: 'MASTERCARD',
       },
     })
+    notifyCardCreated(user.id, 'Mastercard').catch((err) => console.error('Card notification error:', err))
     res.status(201).json({ success: true, card })
   } catch (err) {
     next(err)
@@ -101,6 +103,7 @@ cardRouter.put('/:id/block', async (req: Request, res: Response, next: NextFunct
       where: { id: req.params.id },
       data: { status: 'BLOCKED' },
     })
+    notifyCardBlocked(req.user!.userId, card.network).catch((err) => console.error('Card notification error:', err))
     res.json({ success: true, card: updated })
   } catch (err) {
     next(err)

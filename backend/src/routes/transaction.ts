@@ -6,6 +6,7 @@ import { prisma } from '../lib/prisma'
 import { authenticate } from '../middleware/auth'
 import { generateTransactionReference, calculateFee } from '../lib/banking'
 import { sendTransferReceivedEmail, sendTransferSentEmail } from '../lib/mailer'
+import { notifyTransferReceived, notifyTransferSent } from '../lib/notifications'
 
 export const transactionRouter = Router()
 transactionRouter.use(authenticate)
@@ -46,8 +47,16 @@ transactionRouter.get('/', async (req: Request, res: Response, next: NextFunctio
         skip: (pageNum - 1) * limitNum,
         take: limitNum,
         include: {
-          fromAccount: { include: { user: { select: { firstName: true, lastName: true } } } },
-          toAccount: { include: { user: { select: { firstName: true, lastName: true } } } },
+          fromAccount: {
+            include: {
+              user: { select: { id: true, firstName: true, lastName: true } },
+            },
+          },
+          toAccount: {
+            include: {
+              user: { select: { id: true, firstName: true, lastName: true } },
+            },
+          },
         },
       }),
       prisma.transaction.count({ where }),
@@ -94,12 +103,6 @@ transactionRouter.get('/stats', async (req: Request, res: Response, next: NextFu
       }),
     ])
 
-    // Last 6 months balance evolution (approximate)
-    const months = Array.from({ length: 6 }, (_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      return { label: d.toLocaleString('fr-FR', { month: 'short', year: '2-digit' }), date: d }
-    }).reverse()
-
     res.json({
       success: true,
       stats: {
@@ -132,8 +135,16 @@ transactionRouter.get('/:id', async (req: Request, res: Response, next: NextFunc
         OR: [{ fromAccountId: { in: accountIds } }, { toAccountId: { in: accountIds } }],
       },
       include: {
-        fromAccount: { include: { user: { select: { firstName: true, lastName: true } } } },
-        toAccount: { include: { user: { select: { firstName: true, lastName: true } } } },
+        fromAccount: {
+          include: {
+            user: { select: { id: true, firstName: true, lastName: true } },
+          },
+        },
+        toAccount: {
+          include: {
+            user: { select: { id: true, firstName: true, lastName: true } },
+          },
+        },
       },
     })
     if (!tx) {
@@ -230,7 +241,7 @@ transactionRouter.post('/transfer', async (req: Request, res: Response, next: Ne
       }),
     ])
 
-    // Async notifications (non-blocking)
+    // Async notifications (non-blocking) - email + DB
     Promise.all([
       sendTransferSentEmail(
         fromAccount.user.email,
@@ -248,7 +259,22 @@ transactionRouter.post('/transfer', async (req: Request, res: Response, next: Ne
         `${fromAccount.user.firstName} ${fromAccount.user.lastName}`,
         reference
       ),
-    ]).catch((err) => console.error('Notification email error:', err))
+      notifyTransferSent(
+        fromAccount.user.id,
+        `${toAccount.user.firstName} ${toAccount.user.lastName}`,
+        data.amount,
+        fromAccount.currency,
+        reference
+      ),
+      notifyTransferReceived(
+        toAccount.user.id,
+        fromAccount.user.firstName,
+        fromAccount.user.lastName,
+        data.amount,
+        toAccount.currency,
+        reference
+      ),
+    ]).catch((err) => console.error('Notification error:', err))
 
     res.status(201).json({
       success: true,
@@ -277,6 +303,80 @@ transactionRouter.post('/deposit-request', async (req: Request, res: Response, n
       },
     })
     res.status(201).json({ success: true, deposit })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// GET /api/transactions/balance-history
+transactionRouter.get('/balance-history', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const account = await prisma.account.findFirst({
+      where: { userId: req.user!.userId, status: 'ACTIVE' },
+    })
+    if (!account) {
+      res.json({ success: true, history: [] })
+      return
+    }
+
+    const now = new Date()
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
+
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        OR: [
+          { fromAccountId: account.id },
+          { toAccountId: account.id },
+        ],
+        status: 'COMPLETED',
+        createdAt: { gte: sixMonthsAgo },
+      },
+      orderBy: { createdAt: 'asc' },
+    })
+
+    const months: { label: string; start: Date; end: Date }[] = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+      const end = new Date(now.getFullYear(), now.getMonth() - 5 + i + 1, 0)
+      return {
+        label: d.toLocaleString('fr-FR', { month: 'short', year: '2-digit' }),
+        start: d,
+        end,
+      }
+    })
+
+    const history = months.map((month) => {
+      const txsUpToEnd = transactions.filter((tx) => tx.createdAt <= month.end)
+      const balance = txsUpToEnd.reduce((acc, tx) => {
+        if (String(tx.fromAccountId) === account.id) {
+          return acc - Number(tx.amount) - Number(tx.fee)
+        }
+        if (String(tx.toAccountId) === account.id) {
+          return acc + Number(tx.amount)
+        }
+        return acc
+      }, Number(account.balance))
+
+      const monthTx = transactions.filter(
+        (tx) => tx.createdAt >= month.start && tx.createdAt <= month.end
+      )
+      const change = monthTx.reduce((acc, tx) => {
+        if (String(tx.fromAccountId) === account.id) {
+          return acc - Number(tx.amount) - Number(tx.fee)
+        }
+        if (String(tx.toAccountId) === account.id) {
+          return acc + Number(tx.amount)
+        }
+        return acc
+      }, 0)
+
+      return {
+        month: month.label,
+        balance: Math.max(0, balance),
+        change,
+      }
+    })
+
+    res.json({ success: true, history })
   } catch (err) {
     next(err)
   }

@@ -148,6 +148,15 @@ authRouter.post('/login', authLimiter, async (req: Request, res: Response, next:
     // Clear attempts on success
     await redis.del(attemptsKey)
 
+    // Verify email before allowing login
+    if (!user.isEmailVerified) {
+      res.status(403).json({
+        success: false,
+        message: 'Please verify your email address before logging in',
+      })
+      return
+    }
+
     // 2FA check
     if (user.twoFactorEnabled) {
       if (!data.totpCode) {
@@ -183,6 +192,7 @@ authRouter.post('/login', authLimiter, async (req: Request, res: Response, next:
           lastName: user.lastName,
           role: user.role,
           isEmailVerified: user.isEmailVerified,
+          profilePicture: user.profilePicture,
           twoFactorEnabled: user.twoFactorEnabled,
         },
         accessToken,
@@ -250,7 +260,7 @@ authRouter.get('/me', authenticate, async (req: Request, res: Response, next: Ne
       select: {
         id: true, email: true, firstName: true, lastName: true,
         phone: true, role: true, isEmailVerified: true,
-        twoFactorEnabled: true, createdAt: true,
+        twoFactorEnabled: true, createdAt: true, profilePicture: true,
       },
     })
     if (!user) {
