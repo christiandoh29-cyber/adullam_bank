@@ -1,14 +1,12 @@
 // src/lib/notifications.ts
 import { prisma } from './prisma'
-import type { NotificationType } from '@prisma/client'
-import type { Prisma } from '@prisma/client'
 
 interface CreateNotification {
   userId: string
-  type: NotificationType
+  type: 'TRANSFER_RECEIVED' | 'TRANSFER_SENT' | 'DEPOSIT_APPROVED' | 'DEPOSIT_REJECTED' | 'CARD_CREATED' | 'CARD_BLOCKED' | 'ACCOUNT_SUSPENDED' | 'ACCOUNT_ACTIVATED' | 'SECURITY_ALERT'
   title: string
   message: string
-  metadata?: Prisma.InputJsonValue
+  metadata?: any
 }
 
 export async function createNotification(data: CreateNotification) {
