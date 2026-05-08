@@ -54,6 +54,7 @@ export default function App() {
     authApi.me()
       .then((res) => setUser(res.data.user))
       .catch(() => logout())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

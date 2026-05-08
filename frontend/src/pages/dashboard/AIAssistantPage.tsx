@@ -116,7 +116,6 @@ export default function AIAssistantPage() {
     const flushTable = () => {
       if (tableRows.length > 0) {
         const rows = tableRows.slice(1)
-        const cols = tableRows[0].split('|').filter((c) => c.trim()).length
         elements.push(
           <div key={elements.length} className="overflow-x-auto my-3">
             <table className="w-full text-xs">

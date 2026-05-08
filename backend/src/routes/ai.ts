@@ -22,9 +22,7 @@ aiRouter.post('/chat', async (req: Request, res: Response, next: NextFunction) =
     res.setHeader('Connection', 'keep-alive')
     res.setHeader('X-Accel-Buffering', 'no')
 
-    let responseText = ''
     const onChunk = (chunk: string) => {
-      responseText += chunk
       res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`)
     }
 

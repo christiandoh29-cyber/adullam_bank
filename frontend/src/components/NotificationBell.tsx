@@ -53,6 +53,7 @@ export default function NotificationBell() {
     }
   }, [data])
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const markReadMutation = useMutation({
     mutationFn: (id: string) => notificationApi.markRead(id),
     onSuccess: (_, id) => markAsRead(id),
@@ -81,7 +82,7 @@ export default function NotificationBell() {
       document.addEventListener('mousedown', handleClickOutside)
     }
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isOpen])
+  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
