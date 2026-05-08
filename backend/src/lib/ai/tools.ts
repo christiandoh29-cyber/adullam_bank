@@ -187,12 +187,12 @@ export class AgentTools {
           sent: {
             total: Number(sent._sum.amount ?? 0),
             count: sent._count,
-            average: (sent._avg as { amount: number | null } | null)?.amount ?? 0,
+            average: (sent._avg as unknown as { amount: number | null } | null)?.amount ?? 0,
           },
           received: {
             total: Number(received._sum.amount ?? 0),
             count: received._count,
-            average: (received._avg as { amount: number | null } | null)?.amount ?? 0,
+            average: (received._avg as unknown as { amount: number | null } | null)?.amount ?? 0,
           },
           pendingCount: pending,
           netFlow: Number(sent._sum.amount ?? 0) - Number(received._sum.amount ?? 0),
