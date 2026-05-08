@@ -1,6 +1,8 @@
 // prisma/schema.prisma
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  output        = "../backend/node_modules/.prisma/client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -52,6 +54,23 @@ enum DepositStatus {
   REJECTED
 }
 
+enum NotificationType {
+  TRANSFER_RECEIVED
+  TRANSFER_SENT
+  DEPOSIT_APPROVED
+  DEPOSIT_REJECTED
+  CARD_CREATED
+  CARD_BLOCKED
+  ACCOUNT_SUSPENDED
+  ACCOUNT_ACTIVATED
+  SECURITY_ALERT
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+}
+
 model User {
   id                String    @id @default(cuid())
   email             String    @unique
@@ -59,6 +78,7 @@ model User {
   firstName         String
   lastName          String
   phone             String?
+  profilePicture    String?
   role              Role      @default(USER)
   isEmailVerified   Boolean   @default(false)
   emailVerifyToken  String?
@@ -69,6 +89,7 @@ model User {
 
   accounts          Account[]
   depositRequests   DepositRequest[]
+  notifications     Notification[]
 
   @@map("users")
 }
@@ -150,4 +171,18 @@ model DepositRequest {
   updatedAt   DateTime      @updatedAt
 
   @@map("deposit_requests")
+}
+
+model Notification {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  status    NotificationStatus @default(UNREAD)
+  metadata  Json?
+  createdAt DateTime           @default(now())
+
+  @@map("notifications")
 }

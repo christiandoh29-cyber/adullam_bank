@@ -13,6 +13,7 @@ import { transactionRouter } from './routes/transaction'
 import { adminRouter } from './routes/admin'
 import { userRouter } from './routes/user'
 import { notificationRouter } from './routes/notification'
+import { aiRouter } from './routes/ai'
 import { errorHandler } from './middleware/error'
 import { prisma } from './lib/prisma'
 import { redis } from './lib/redis'
@@ -56,6 +57,7 @@ app.use('/api/transactions', transactionRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/users', userRouter)
 app.use('/api/notifications', notificationRouter)
+app.use('/api/agents', aiRouter)
 
 // 404
 app.use((_req, res) => {

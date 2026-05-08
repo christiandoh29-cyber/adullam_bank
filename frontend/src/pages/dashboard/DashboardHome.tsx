@@ -12,26 +12,21 @@ import { accountApi, transactionApi } from '../../lib/api'
 import { useAuthStore } from '../../store/auth'
 import {
   formatAmount, formatRelative, getTransactionColor,
-  getStatusBadge, formatDate
+  getStatusBadge
 } from '../../lib/utils'
 
-// Mock balance evolution data (in real app, derived from transactions)
-function buildChartData(balance: number) {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
-  let v = balance * 0.4
-  return months.map((m, i) => {
-    v = v + (Math.random() - 0.3) * balance * 0.2
-    if (i === months.length - 1) v = balance
-    return { month: m, balance: Math.max(0, Math.round(v)) }
-  })
-}
-
-const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) => {
+const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number; payload?: { change?: number } }[]; label?: string }) => {
   if (active && payload && payload.length) {
+    const change = payload[0].payload?.change
     return (
-      <div className="bg-surface-800 border border-white/10 rounded-xl p-3 text-sm shadow-lg">
+      <div className="bg-surface-800 border border-theme rounded-xl p-3 text-sm shadow-lg">
         <p className="text-surface-400 text-xs mb-1">{label}</p>
         <p className="text-white font-semibold">{formatAmount(payload[0].value)}</p>
+        {change !== undefined && (
+          <p className={`text-xs mt-1 ${change >= 0 ? 'text-accent-green' : 'text-accent-rose'}`}>
+            {change >= 0 ? '+' : ''}{formatAmount(change)}
+          </p>
+        )}
       </div>
     )
   }
@@ -56,9 +51,14 @@ export default function DashboardHome() {
     queryFn: () => transactionApi.getStats().then((r) => r.data),
   })
 
+  const { data: balanceHistoryData } = useQuery({
+    queryKey: ['balance-history'],
+    queryFn: () => transactionApi.getBalanceHistory().then((r) => r.data),
+  })
+
   const account = accountsData?.accounts?.[0]
   const balance = Number(account?.balance ?? 0)
-  const chartData = buildChartData(balance)
+  const chartData = balanceHistoryData?.history ?? []
   const stats = statsData?.stats
 
   return (
@@ -193,7 +193,7 @@ export default function DashboardHome() {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
               <XAxis dataKey="month" stroke="#555578" tick={{ fontSize: 11, fill: '#7a7a9b' }} />
-              <YAxis stroke="#555578" tick={{ fontSize: 11, fill: '#7a7a9b' }} tickFormatter={(v) => `€${v}`} />
+              <YAxis stroke="#555578" tick={{ fontSize: 11, fill: '#7a7a9b' }} tickFormatter={(v) => `€${v}`} domain={['auto', 'auto']} />
               <Tooltip content={<CustomTooltip />} />
               <Area type="monotone" dataKey="balance" stroke="#6C3CE1" strokeWidth={2} fill="url(#balanceGrad)" dot={false} activeDot={{ r: 5, fill: '#A855F7' }} />
             </AreaChart>

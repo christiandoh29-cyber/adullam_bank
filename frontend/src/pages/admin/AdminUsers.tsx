@@ -86,7 +86,7 @@ export default function AdminUsers() {
               const isSuspended = account?.status === 'SUSPENDED'
 
               return (
-                <div key={user.id} className="flex items-center gap-4 p-4 hover:bg-white/3 transition-colors">
+                <div key={user.id} className="flex items-center gap-4 p-4 hover-surface transition-colors">
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${
                     user.role === 'ADMIN' ? 'bg-gradient-to-br from-accent-rose to-accent-amber' : 'bg-brand-gradient'
                   }`}>
@@ -147,7 +147,7 @@ export default function AdminUsers() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="w-9 h-9 rounded-xl bg-surface-800 border border-white/10 flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40 transition-colors"
+            className="w-9 h-9 rounded-xl bg-surface-800 border border-theme flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40 transition-colors"
           >
             <ChevronLeft size={16} />
           </button>
@@ -157,7 +157,7 @@ export default function AdminUsers() {
           <button
             onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
             disabled={page >= pagination.pages}
-            className="w-9 h-9 rounded-xl bg-surface-800 border border-white/10 flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40 transition-colors"
+            className="w-9 h-9 rounded-xl bg-surface-800 border border-theme flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40 transition-colors"
           >
             <ChevronRight size={16} />
           </button>

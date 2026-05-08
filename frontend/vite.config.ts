@@ -2,8 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+const plugins: import('vite').Plugin[] = [react()]
+
 export default defineConfig({
-  plugins: [react()],
+  plugins,
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -13,7 +15,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:3997',
+        target: process.env.VITE_API_URL || 'http://localhost:3998',
         changeOrigin: true,
       },
     },

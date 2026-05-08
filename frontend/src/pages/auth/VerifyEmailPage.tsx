@@ -6,11 +6,13 @@ import { authApi } from '../../lib/api'
 
 export default function VerifyEmailPage() {
   const { token } = useParams<{ token: string }>()
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
-  const [message, setMessage] = useState('')
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
+    !token ? 'error' : 'loading'
+  )
+  const [message, setMessage] = useState(!token ? 'Invalid link' : '')
 
   useEffect(() => {
-    if (!token) { setStatus('error'); setMessage('Invalid link'); return }
+    if (!token) return
     authApi.verifyEmail(token)
       .then((res) => { setStatus('success'); setMessage(res.data.message) })
       .catch((err) => {

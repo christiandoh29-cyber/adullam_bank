@@ -10,6 +10,7 @@ export interface AuthUser {
   role: 'USER' | 'ADMIN'
   isEmailVerified: boolean
   twoFactorEnabled: boolean
+  profilePicture?: string | null
 }
 
 interface AuthState {

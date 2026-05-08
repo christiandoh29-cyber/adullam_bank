@@ -1,10 +1,10 @@
 // src/pages/dashboard/ProfilePage.tsx
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useMutation } from '@tanstack/react-query'
-import { User, Lock, CheckCircle, Loader2, Eye, EyeOff } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { User, Lock, CheckCircle, Loader2, Eye, EyeOff, Camera, Trash2 } from 'lucide-react'
 import { userApi } from '../../lib/api'
 import { useAuthStore } from '../../store/auth'
 import { getInitials } from '../../lib/utils'
@@ -29,9 +29,12 @@ type PasswordData = z.infer<typeof passwordSchema>
 
 export default function ProfilePage() {
   const { user, setUser } = useAuthStore()
+  const qc = useQueryClient()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [profileSuccess, setProfileSuccess] = useState(false)
   const [passwordSuccess, setPasswordSuccess] = useState(false)
   const [showPwd, setShowPwd] = useState(false)
+  const [uploadError, setUploadError] = useState('')
 
   const profileForm = useForm<ProfileData>({
     resolver: zodResolver(profileSchema),
@@ -49,6 +52,25 @@ export default function ProfilePage() {
     },
   })
 
+  const uploadPicture = useMutation({
+    mutationFn: (file: File) => userApi.uploadProfilePicture(file),
+    onSuccess: (res) => {
+      setUser({ ...user!, profilePicture: res.data.profilePicture })
+      qc.invalidateQueries({ queryKey: ['notifications'] })
+      setUploadError('')
+    },
+    onError: () => {
+      setUploadError('Failed to upload photo. Max size: 500KB')
+    },
+  })
+
+  const deletePicture = useMutation({
+    mutationFn: () => userApi.deleteProfilePicture(),
+    onSuccess: () => {
+      setUser({ ...user!, profilePicture: null })
+    },
+  })
+
   const updatePassword = useMutation({
     mutationFn: (data: PasswordData) => userApi.updatePassword(data),
     onSuccess: () => {
@@ -57,6 +79,17 @@ export default function ProfilePage() {
       setTimeout(() => setPasswordSuccess(false), 3000)
     },
   })
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 500 * 1024) {
+      setUploadError('File too large. Max size is 500KB.')
+      return
+    }
+    setUploadError('')
+    uploadPicture.mutate(file)
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 animate-fade-in">
@@ -67,12 +100,55 @@ export default function ProfilePage() {
 
       {/* Avatar */}
       <div className="glass-card p-5 flex items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-brand-gradient flex items-center justify-center text-white text-xl font-bold shadow-brand-sm">
-          {user ? getInitials(user.firstName, user.lastName) : 'U'}
+        <div className="relative group flex-shrink-0">
+          {user?.profilePicture ? (
+            <img
+              src={user.profilePicture}
+              alt="Profile"
+              className="w-14 h-14 rounded-2xl object-cover shadow-brand-sm"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-brand-gradient flex items-center justify-center text-white text-xl font-bold shadow-brand-sm">
+              {user ? getInitials(user.firstName, user.lastName) : 'U'}
+            </div>
+          )}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadPicture.isPending}
+            className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Change photo"
+          >
+            {uploadPicture.isPending ? (
+              <Loader2 size={18} className="text-white animate-spin" />
+            ) : (
+              <Camera size={18} className="text-white" />
+            )}
+          </button>
+          {user?.profilePicture && (
+            <button
+              onClick={() => deletePicture.mutate()}
+              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-accent-rose flex items-center justify-center shadow-md hover:bg-accent-rose/80 transition-colors"
+              title="Remove photo"
+            >
+              <Trash2 size={11} className="text-white" />
+            </button>
+          )}
         </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
         <div>
           <p className="text-white font-semibold">{user?.firstName} {user?.lastName}</p>
           <p className="text-surface-400 text-sm">{user?.email}</p>
+          {uploadError && (
+            <p className="text-accent-rose text-xs mt-1">{uploadError}</p>
+          )}
           <div className="flex items-center gap-2 mt-1">
             <span className={`badge ${user?.isEmailVerified ? 'badge-green' : 'badge-yellow'}`}>
               {user?.isEmailVerified ? 'Email Verified' : 'Email Not Verified'}

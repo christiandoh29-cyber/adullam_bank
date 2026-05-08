@@ -58,14 +58,14 @@ export default function AdminTransactions() {
         <select
           value={type}
           onChange={(e) => { setType(e.target.value); setPage(1) }}
-          className="bg-surface-800 border border-white/10 text-white text-sm rounded-lg px-3 py-1.5 outline-none"
+          className="bg-surface-800 border border-theme text-white text-sm rounded-lg px-3 py-1.5 outline-none"
         >
           {TX_TYPES.map((t) => <option key={t} value={t}>{t === 'ALL' ? 'All Types' : t.replace('_', ' ')}</option>)}
         </select>
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1) }}
-          className="bg-surface-800 border border-white/10 text-white text-sm rounded-lg px-3 py-1.5 outline-none"
+          className="bg-surface-800 border border-theme text-white text-sm rounded-lg px-3 py-1.5 outline-none"
         >
           {TX_STATUSES.map((s) => <option key={s} value={s}>{s === 'ALL' ? 'All Statuses' : s}</option>)}
         </select>
@@ -95,7 +95,7 @@ export default function AdminTransactions() {
               const to = tx.toAccount?.user
 
               return (
-                <div key={tx.id} className="flex items-center gap-4 p-4 hover:bg-white/3 transition-colors">
+                <div key={tx.id} className="flex items-center gap-4 p-4 hover-surface transition-colors">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isCredit ? 'bg-accent-green/10' : 'bg-accent-rose/10'}`}>
                     {isCredit
                       ? <ArrowDownLeft size={16} className="text-accent-green" />
@@ -133,12 +133,12 @@ export default function AdminTransactions() {
       {pagination && pagination.pages > 1 && (
         <div className="flex items-center justify-center gap-2">
           <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-            className="w-9 h-9 rounded-xl bg-surface-800 border border-white/10 flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40">
+            className="w-9 h-9 rounded-xl bg-surface-800 border border-theme flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40">
             <ChevronLeft size={16} />
           </button>
           <span className="text-surface-400 text-sm">Page <span className="text-white">{page}</span> of {pagination.pages}</span>
           <button onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))} disabled={page >= pagination.pages}
-            className="w-9 h-9 rounded-xl bg-surface-800 border border-white/10 flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40">
+            className="w-9 h-9 rounded-xl bg-surface-800 border border-theme flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40">
             <ChevronRight size={16} />
           </button>
         </div>

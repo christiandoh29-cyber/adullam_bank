@@ -58,7 +58,7 @@ export default function AdminDashboard() {
 
       {/* Recent transactions */}
       <div className="glass-card overflow-hidden">
-        <div className="p-4 border-b border-white/5 flex items-center justify-between">
+        <div className="p-4 border-b border-theme flex items-center justify-between">
           <h3 className="text-white font-semibold text-sm">Recent Transactions</h3>
           <a href="/admin/transactions" className="text-brand-400 text-xs hover:text-brand-300 transition-colors">View all →</a>
         </div>
@@ -81,7 +81,7 @@ export default function AdminDashboard() {
             {(stats?.recentTransactions ?? []).map((tx: Transaction) => {
               const isCredit = tx.type === 'DEPOSIT' || tx.type === 'TRANSFER_RECEIVED'
               return (
-                <div key={tx.id} className="flex items-center gap-4 p-4 hover:bg-white/3 transition-colors">
+                <div key={tx.id} className="flex items-center gap-4 p-4 hover-surface transition-colors">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isCredit ? 'bg-accent-green/10' : 'bg-accent-rose/10'}`}>
                     {isCredit
                       ? <ArrowDownLeft size={16} className="text-accent-green" />

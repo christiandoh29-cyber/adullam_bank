@@ -112,6 +112,7 @@ export const transactionApi = {
   requestDeposit: (data: { amount: number; note?: string }) =>
     api.post('/transactions/deposit-request', data),
   getMyDepositRequests: () => api.get('/transactions/my/deposit-requests'),
+  getBalanceHistory: () => api.get('/transactions/balance-history'),
 }
 
 // Admin
@@ -136,6 +137,45 @@ export const userApi = {
     api.put('/users/profile', data),
   updatePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.put('/users/password', data),
+  uploadProfilePicture: async (file: File) => {
+    const formData = new FormData()
+    formData.append('picture', file)
+    const res = await api.post<{ success: boolean; profilePicture: string }>(
+      '/users/profile-picture',
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+    return res
+  },
+  deleteProfilePicture: () =>
+    api.delete('/users/profile-picture'),
+}
+
+// Notifications
+export interface Notification {
+  id: string
+  type: string
+  title: string
+  message: string
+  status: 'UNREAD' | 'READ'
+  metadata?: Record<string, unknown>
+  createdAt: string
+}
+
+export interface NotificationsResponse {
+  success: boolean
+  notifications: Notification[]
+  unreadCount: number
+  pagination: { page: number; limit: number; total: number; pages: number }
+}
+
+export const notificationApi = {
+  getAll: (params?: { page?: number; limit?: number; unreadOnly?: boolean }) =>
+    api.get<NotificationsResponse>('/notifications', { params }),
+  markRead: (id: string) => api.put(`/notifications/${id}/read`),
+  markAllRead: () => api.put('/notifications/read-all'),
+  delete: (id: string) => api.delete(`/notifications/${id}`),
+  getUnreadCount: () => api.get<{ success: boolean; count: number }>('/notifications/unread-count'),
 }
 
 // Types
@@ -162,4 +202,84 @@ export interface TransferInput {
   toIban: string
   amount: number
   description?: string
+}
+
+// AI Agents
+export interface AgentChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+  timestamp?: string
+}
+
+export interface AgentStreamChunk {
+  type: 'chunk' | 'done' | 'error'
+  content?: string
+  agent?: string
+  message?: string
+}
+
+export const agentApi = {
+  chatStream: async (
+    message: string,
+    agent: 'accountant' | 'account-manager' = 'accountant',
+    onChunk: (text: string) => void,
+    onDone: () => void,
+    onError: (err: Error) => void
+  ): Promise<void> => {
+    try {
+      const response = await fetch('/api/agents/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ message, agent }),
+      })
+
+      if (!response.body) {
+        onError(new Error('No response body'))
+        return
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6))
+              if (data.type === 'chunk' && data.content) {
+                onChunk(data.content)
+              } else if (data.type === 'done') {
+                onDone()
+              }
+            } catch {
+              // Skip malformed JSON
+            }
+          }
+        }
+      }
+    } catch (err) {
+      onError(err instanceof Error ? err : new Error('Request failed'))
+    }
+  },
+
+  getFinancialReport: (params: { period?: 'month' | 'quarter' | 'year'; includeTransactions?: boolean }) =>
+    api.post('/agents/accountant/report', params),
+
+  getAccountGuidance: () =>
+    api.get('/agents/account-manager/guidance'),
+
+  getCardGuidance: () =>
+    api.get('/agents/account-manager/card-guidance'),
+
+  getModels: () =>
+    api.get('/agents/models'),
 }

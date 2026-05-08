@@ -1,15 +1,21 @@
 // src/pages/dashboard/TransactionsPage.tsx
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowUpRight, ArrowDownLeft, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowUpRight, ArrowDownLeft, Search, Filter, ChevronLeft, ChevronRight, Download, X, Copy } from 'lucide-react'
 import { transactionApi } from '../../lib/api'
 import {
   formatAmount, formatDateTime, getTransactionColor,
-  getStatusBadge, getTransactionSign
+  getStatusBadge
 } from '../../lib/utils'
 
 const TX_TYPES = ['ALL', 'DEPOSIT', 'TRANSFER_SENT', 'TRANSFER_RECEIVED', 'FEE']
 const TX_STATUSES = ['ALL', 'COMPLETED', 'PENDING', 'FAILED', 'CANCELLED']
+
+interface AccountInfo {
+  iban?: string
+  accountNumber?: string
+  user?: { id?: string; firstName?: string; lastName?: string }
+}
 
 interface Transaction {
   id: string
@@ -23,14 +29,126 @@ interface Transaction {
   createdAt: string
   fromAccountId?: string
   toAccountId?: string
-  fromAccount?: { user?: { firstName?: string; lastName?: string } }
-  toAccount?: { user?: { firstName?: string; lastName?: string } }
+  fromAccount?: AccountInfo
+  toAccount?: AccountInfo
+}
+
+function DetailModal({ tx, onClose, onDownload }: { tx: Transaction; onClose: () => void; onDownload: () => void }) {
+  const isCredit = tx.type === 'DEPOSIT' || tx.type === 'TRANSFER_RECEIVED'
+  const counterparty = isCredit ? tx.fromAccount : tx.toAccount
+  const myAccount = isCredit ? tx.toAccount : tx.fromAccount
+
+  const copyRef = () => navigator.clipboard.writeText(tx.reference)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-surface-900 border border-theme rounded-2xl shadow-xl w-full max-w-lg animate-scale-up">
+        <div className="flex items-center justify-between p-5 border-b border-theme">
+          <h3 className="text-white font-semibold">Transaction Details</h3>
+          <button onClick={onClose} className="text-surface-400 hover:text-white transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5">
+          <div className="text-center">
+            <p className={`text-3xl font-bold ${getTransactionColor(tx.type)}`}>
+              {isCredit ? '+' : '-'}{formatAmount(Number(tx.amount), tx.currency)}
+            </p>
+            <span className={`inline-block mt-2 badge ${getStatusBadge(tx.status)}`}>{tx.status}</span>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              { label: 'Reference', value: tx.reference, copyable: true },
+              { label: 'Type', value: tx.type.replace(/_/g, ' ') },
+              { label: 'Date', value: formatDateTime(tx.createdAt) },
+              { label: 'Fee', value: Number(tx.fee) > 0 ? formatAmount(Number(tx.fee), tx.currency) : 'Free' },
+              ...(tx.description ? [{ label: 'Description', value: tx.description }] : []),
+            ].map(({ label, value, copyable }) => (
+              <div key={label} className="flex items-center justify-between">
+                <span className="text-surface-400 text-sm">{label}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-white text-sm font-mono">{value}</span>
+                  {copyable && (
+                    <button onClick={copyRef} className="text-surface-500 hover:text-brand-400 transition-colors" title="Copy reference">
+                      <Copy size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {counterparty && (
+            <div className="border-t border-theme pt-4">
+              <p className="text-surface-400 text-xs font-semibold uppercase tracking-wider mb-3">
+                {isCredit ? 'Received from' : 'Sent to'}
+              </p>
+              <div className="bg-surface-800/50 rounded-xl p-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-surface-400 text-sm">Name</span>
+                  <span className="text-white text-sm font-medium">
+                    {counterparty.user?.firstName} {counterparty.user?.lastName}
+                  </span>
+                </div>
+                {counterparty.iban && (
+                  <div className="flex justify-between">
+                    <span className="text-surface-400 text-sm">IBAN</span>
+                    <span className="text-white text-sm font-mono">{counterparty.iban}</span>
+                  </div>
+                )}
+                {counterparty.accountNumber && (
+                  <div className="flex justify-between">
+                    <span className="text-surface-400 text-sm">Account No.</span>
+                    <span className="text-white text-sm font-mono">{counterparty.accountNumber}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {myAccount && (
+            <div className="border-t border-theme pt-4">
+              <p className="text-surface-400 text-xs font-semibold uppercase tracking-wider mb-3">Your Account</p>
+              <div className="bg-surface-800/50 rounded-xl p-4 space-y-2">
+                {myAccount.iban && (
+                  <div className="flex justify-between">
+                    <span className="text-surface-400 text-sm">IBAN</span>
+                    <span className="text-white text-sm font-mono">{myAccount.iban}</span>
+                  </div>
+                )}
+                {myAccount.accountNumber && (
+                  <div className="flex justify-between">
+                    <span className="text-surface-400 text-sm">Account No.</span>
+                    <span className="text-white text-sm font-mono">{myAccount.accountNumber}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 border-t border-theme">
+          <button
+            onClick={onDownload}
+            className="w-full flex items-center justify-center gap-2 bg-brand-gradient text-white py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
+          >
+            <Download size={16} />
+            Download Receipt
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function TransactionsPage() {
   const [page, setPage] = useState(1)
   const [type, setType] = useState('ALL')
   const [status, setStatus] = useState('ALL')
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['transactions', { page, type, status }],
@@ -64,7 +182,7 @@ export default function TransactionsPage() {
           <select
             value={type}
             onChange={(e) => { setType(e.target.value); setPage(1) }}
-            className="bg-surface-800 border border-white/10 text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-brand-500/50"
+            className="bg-surface-800 border border-theme text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-brand-500/50"
           >
             {TX_TYPES.map((t) => <option key={t} value={t}>{t === 'ALL' ? 'All Types' : t.replace('_', ' ')}</option>)}
           </select>
@@ -72,7 +190,7 @@ export default function TransactionsPage() {
           <select
             value={status}
             onChange={(e) => { setStatus(e.target.value); setPage(1) }}
-            className="bg-surface-800 border border-white/10 text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-brand-500/50"
+            className="bg-surface-800 border border-theme text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-brand-500/50"
           >
             {TX_STATUSES.map((s) => <option key={s} value={s}>{s === 'ALL' ? 'All Statuses' : s}</option>)}
           </select>
@@ -114,7 +232,11 @@ export default function TransactionsPage() {
                 : tx.toAccount?.user
 
               return (
-                <div key={tx.id} className="flex items-center gap-4 p-4 hover:bg-white/3 transition-colors">
+                <div
+                  key={tx.id}
+                  onClick={() => setSelectedTx(tx)}
+                  className="flex items-center gap-4 p-4 hover:bg-surface-800 transition-colors cursor-pointer"
+                >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isCredit ? 'bg-accent-green/10' : 'bg-accent-rose/10'}`}>
                     {isCredit
                       ? <ArrowDownLeft size={18} className="text-accent-green" />
@@ -156,13 +278,24 @@ export default function TransactionsPage() {
         )}
       </div>
 
+      {/* Detail Modal */}
+      {selectedTx && (
+        <DetailModal
+          tx={selectedTx}
+          onClose={() => setSelectedTx(null)}
+          onDownload={() => {
+            import('../../lib/receipt').then(({ downloadReceipt }) => downloadReceipt(selectedTx))
+          }}
+        />
+      )}
+
       {/* Pagination */}
       {pagination && pagination.pages > 1 && (
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="w-9 h-9 rounded-xl bg-surface-800 border border-white/10 flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40 transition-colors"
+            className="w-9 h-9 rounded-xl bg-surface-800 border border-theme flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40 transition-colors"
           >
             <ChevronLeft size={16} />
           </button>
@@ -172,7 +305,7 @@ export default function TransactionsPage() {
           <button
             onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
             disabled={page >= pagination.pages}
-            className="w-9 h-9 rounded-xl bg-surface-800 border border-white/10 flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40 transition-colors"
+            className="w-9 h-9 rounded-xl bg-surface-800 border border-theme flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40 transition-colors"
           >
             <ChevronRight size={16} />
           </button>

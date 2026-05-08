@@ -163,7 +163,7 @@ export default function TransferPage() {
               </span>
               <span className="text-white">{formatAmount(fee)}</span>
             </div>
-            <div className="border-t border-white/10 pt-2 flex items-center justify-between">
+            <div className="border-t border-theme pt-2 flex items-center justify-between">
               <span className="text-surface-300 font-medium">Total debit</span>
               <span className={`font-bold ${canAfford ? 'text-white' : 'text-accent-rose'}`}>
                 {formatAmount(total)}

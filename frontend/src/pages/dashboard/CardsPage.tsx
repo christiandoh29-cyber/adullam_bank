@@ -1,7 +1,7 @@
 // src/pages/dashboard/CardsPage.tsx
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Eye, EyeOff, Lock, Unlock, Settings, Loader2, CreditCard } from 'lucide-react'
+import { Plus, Eye, EyeOff, Lock, Unlock, Loader2, CreditCard } from 'lucide-react'
 import { cardApi } from '../../lib/api'
 import { formatCardNumber, formatExpiry, maskCardNumber, formatAmount } from '../../lib/utils'
 
@@ -23,7 +23,7 @@ function CardVisual({ card, showDetails }: { card: Card; showDetails: boolean })
   const isBlocked = card.status === 'BLOCKED'
 
   return (
-    <div className={`relative w-full aspect-[1.586/1] rounded-2xl overflow-hidden select-none transition-all duration-300 ${isBlocked ? 'opacity-60 grayscale' : ''}`}>
+    <div className="dark relative w-full aspect-[1.586/1] rounded-2xl overflow-hidden select-none transition-all duration-300 ${isBlocked ? 'opacity-60 grayscale' : ''}">
       {/* Card background */}
       <div className={`absolute inset-0 ${isVisa
         ? 'bg-gradient-to-br from-[#1a1a3e] via-[#0f2744] to-[#1a1a2e]'
@@ -87,7 +87,6 @@ function CardVisual({ card, showDetails }: { card: Card; showDetails: boolean })
 export default function CardsPage() {
   const qc = useQueryClient()
   const [showDetailsId, setShowDetailsId] = useState<string | null>(null)
-  const [selectedCard, setSelectedCard] = useState<Card | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['cards'],

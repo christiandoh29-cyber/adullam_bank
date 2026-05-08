@@ -34,7 +34,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
 
 function RibField({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
+    <div className="flex items-center justify-between py-3 border-b border-theme last:border-0">
       <div>
         <p className="text-surface-400 text-xs mb-0.5">{label}</p>
         <p className={`text-white text-sm font-medium ${mono ? 'font-mono tracking-wide' : ''}`}>{value}</p>

@@ -23,6 +23,7 @@ import TransferPage from './pages/dashboard/TransferPage'
 import RibPage from './pages/dashboard/RibPage'
 import ProfilePage from './pages/dashboard/ProfilePage'
 import DepositPage from './pages/dashboard/DepositPage'
+import AIAssistantPage from './pages/dashboard/AIAssistantPage'
 
 // Admin pages
 import AdminLayout from './components/layout/AdminLayout'
@@ -78,6 +79,7 @@ export default function App() {
         <Route path="rib" element={<RibPage />} />
         <Route path="deposit" element={<DepositPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="ai-assistant" element={<AIAssistantPage />} />
       </Route>
 
       {/* Admin routes */}

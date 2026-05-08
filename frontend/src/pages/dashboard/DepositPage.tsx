@@ -92,7 +92,7 @@ export default function DepositPage() {
                   'py-2.5 rounded-xl border text-sm font-medium transition-all',
                   watch('amount') === String(a)
                     ? 'bg-brand-500/20 border-brand-500/50 text-brand-300'
-                    : 'bg-surface-800 border-white/10 text-surface-300 hover:border-brand-500/30 hover:text-white'
+                    : 'bg-surface-800 border-theme text-surface-300 hover:border-brand-500/30 hover:text-white'
                 )}
               >
                 €{a.toLocaleString()}
@@ -146,7 +146,7 @@ export default function DepositPage() {
       {/* History */}
       {deposits.length > 0 && (
         <div className="glass-card overflow-hidden">
-          <div className="p-4 border-b border-white/5">
+          <div className="p-4 border-b border-theme">
             <h3 className="text-white font-semibold text-sm">Deposit History</h3>
           </div>
           <div className="divide-y divide-white/5">

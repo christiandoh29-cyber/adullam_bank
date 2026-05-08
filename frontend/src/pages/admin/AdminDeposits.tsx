@@ -76,7 +76,7 @@ export default function AdminDeposits() {
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               status === s
                 ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30'
-                : 'bg-surface-800 text-surface-400 border border-white/5 hover:text-white hover:border-white/10'
+                : 'bg-surface-800 text-surface-400 border border-theme hover:text-white hover:border-theme'
             }`}
           >
             {s}
@@ -228,12 +228,12 @@ export default function AdminDeposits() {
       {pagination && pagination.pages > 1 && (
         <div className="flex items-center justify-center gap-2">
           <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-            className="w-9 h-9 rounded-xl bg-surface-800 border border-white/10 flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40">
+            className="w-9 h-9 rounded-xl bg-surface-800 border border-theme flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40">
             <ChevronLeft size={16} />
           </button>
           <span className="text-surface-400 text-sm">Page <span className="text-white">{page}</span> of {pagination.pages}</span>
           <button onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))} disabled={page >= pagination.pages}
-            className="w-9 h-9 rounded-xl bg-surface-800 border border-white/10 flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40">
+            className="w-9 h-9 rounded-xl bg-surface-800 border border-theme flex items-center justify-center text-surface-400 hover:text-white disabled:opacity-40">
             <ChevronRight size={16} />
           </button>
         </div>
