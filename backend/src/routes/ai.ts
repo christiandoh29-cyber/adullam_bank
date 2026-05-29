@@ -37,9 +37,10 @@ aiRouter.post('/chat', async (req: Request, res: Response, next: NextFunction) =
     res.write(`data: ${JSON.stringify({ type: 'done', agent: agentType })}\n\n`)
     res.end()
   } catch (err) {
-    res.write(`data: ${JSON.stringify({ type: 'error', message: 'Request failed' })}\n\n`)
-    res.end()
-    next(err)
+    if (!res.headersSent) {
+      res.write(`data: ${JSON.stringify({ type: 'error', message: 'Request failed' })}\n\n`)
+      res.end()
+    }
   }
 })
 

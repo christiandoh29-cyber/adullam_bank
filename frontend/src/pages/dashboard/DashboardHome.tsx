@@ -73,9 +73,9 @@ export default function DashboardHome() {
       </div>
 
       {/* Balance + Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
         {/* Balance card */}
-        <div className="lg:col-span-2 relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 via-brand-500 to-accent-purple p-6 shadow-brand animate-pulse-glow">
+        <div className="lg:col-span-2 relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 via-brand-500 to-accent-purple p-4 sm:p-6 shadow-brand animate-pulse-glow">
           <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/5 blur-2xl" />
           <div className="absolute bottom-0 left-0 w-64 h-32 rounded-full bg-black/10 blur-3xl" />
           <div className="relative z-10">
@@ -85,7 +85,7 @@ export default function DashboardHome() {
                 {loadingAccounts ? (
                   <div className="w-40 h-10 shimmer-bg rounded-lg mt-1" />
                 ) : (
-                  <p className="text-white text-4xl font-bold mt-1 tracking-tight">
+                  <p className="text-white text-2xl sm:text-4xl font-bold mt-1 tracking-tight">
                     {formatAmount(balance)}
                   </p>
                 )}

@@ -34,9 +34,7 @@ api.interceptors.response.use(
 
     // Si c'est une requête de refresh qui échoue, ne pas réessayer
     if (original.url === '/auth/refresh-token') {
-      // Nettoyer et rediriger
       localStorage.clear()
-      window.location.href = '/auth/login'
       return Promise.reject(error)
     }
 
@@ -60,9 +58,7 @@ api.interceptors.response.use(
         return api(original)
       } catch {
         processQueue(error)
-        // Rediriger vers login après échec du refresh
         localStorage.clear()
-        window.location.href = '/auth/login'
         return Promise.reject(error)
       } finally {
         isRefreshing = false

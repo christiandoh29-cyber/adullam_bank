@@ -41,13 +41,13 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-5 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h1 className="text-white text-2xl font-bold">Users</h1>
           <p className="text-surface-400 text-sm mt-1">Manage platform users</p>
         </div>
         {pagination && (
-          <span className="text-surface-400 text-sm">{pagination.total} total users</span>
+          <span className="text-surface-400 text-xs sm:text-sm">{pagination.total} total users</span>
         )}
       </div>
 
@@ -105,8 +105,8 @@ export default function AdminUsers() {
                     <p className="text-surface-500 text-xs truncate">{user.email}</p>
                   </div>
 
-                  <div className="hidden md:block text-right flex-shrink-0">
-                    <p className="text-white text-sm font-medium">
+                  <div className="hidden sm:block text-right flex-shrink-0">
+                    <p className="text-white text-xs sm:text-sm font-medium">
                       {account ? formatAmount(Number(account.balance)) : '—'}
                     </p>
                     <p className="text-surface-500 text-xs">{formatDate(user.createdAt)}</p>

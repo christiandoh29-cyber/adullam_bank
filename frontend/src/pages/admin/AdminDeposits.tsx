@@ -68,7 +68,7 @@ export default function AdminDeposits() {
       </div>
 
       {/* Status tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {STATUS_TABS.map((s) => (
           <button
             key={s}
@@ -108,51 +108,53 @@ export default function AdminDeposits() {
           <div className="divide-y divide-white/5">
             {deposits.map((deposit) => (
               <div key={deposit.id} className="p-5">
-                <div className="flex items-start gap-4">
-                  {/* User avatar */}
-                  <div className="w-10 h-10 rounded-full bg-brand-gradient flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                    {getInitials(deposit.user.firstName, deposit.user.lastName)}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-white font-semibold text-sm">
-                        {deposit.user.firstName} {deposit.user.lastName}
-                      </p>
-                      <span className={`badge ${
-                        deposit.status === 'PENDING' ? 'badge-yellow' :
-                        deposit.status === 'APPROVED' ? 'badge-green' : 'badge-red'
-                      }`}>
-                        {deposit.status}
-                      </span>
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {/* User avatar */}
+                    <div className="w-10 h-10 rounded-full bg-brand-gradient flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+                      {getInitials(deposit.user.firstName, deposit.user.lastName)}
                     </div>
-                    <p className="text-surface-400 text-xs mb-1">{deposit.user.email}</p>
-                    <div className="flex items-center gap-4 text-xs text-surface-500">
-                      <span>Requested: {formatDate(deposit.createdAt)}</span>
-                      {deposit.user.accounts?.[0] && (
-                        <span>Current balance: {formatAmount(Number(deposit.user.accounts[0].balance))}</span>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-white font-semibold text-sm">
+                          {deposit.user.firstName} {deposit.user.lastName}
+                        </p>
+                        <span className={`badge ${
+                          deposit.status === 'PENDING' ? 'badge-yellow' :
+                          deposit.status === 'APPROVED' ? 'badge-green' : 'badge-red'
+                        }`}>
+                          {deposit.status}
+                        </span>
+                      </div>
+                      <p className="text-surface-400 text-xs mb-1">{deposit.user.email}</p>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-surface-500">
+                        <span>Requested: {formatDate(deposit.createdAt)}</span>
+                        {deposit.user.accounts?.[0] && (
+                          <span>Balance: {formatAmount(Number(deposit.user.accounts[0].balance))}</span>
+                        )}
+                      </div>
+                      {deposit.note && (
+                        <p className="mt-2 text-surface-300 text-xs bg-surface-800 rounded-lg px-3 py-2">
+                          <span className="text-surface-500">Note: </span>{deposit.note}
+                        </p>
+                      )}
+                      {deposit.adminNote && (
+                        <p className="mt-1 text-surface-400 text-xs italic">
+                          Admin: "{deposit.adminNote}"
+                        </p>
                       )}
                     </div>
-                    {deposit.note && (
-                      <p className="mt-2 text-surface-300 text-xs bg-surface-800 rounded-lg px-3 py-2">
-                        <span className="text-surface-500">Note: </span>{deposit.note}
-                      </p>
-                    )}
-                    {deposit.adminNote && (
-                      <p className="mt-1 text-surface-400 text-xs italic">
-                        Admin: "{deposit.adminNote}"
-                      </p>
-                    )}
                   </div>
 
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-white text-xl font-bold">{formatAmount(Number(deposit.amount), deposit.currency)}</p>
+                  <div className="text-left sm:text-right flex-shrink-0">
+                    <p className="text-white text-lg sm:text-xl font-bold">{formatAmount(Number(deposit.amount), deposit.currency)}</p>
                   </div>
                 </div>
 
                 {/* Actions for PENDING */}
                 {deposit.status === 'PENDING' && (
-                  <div className="mt-4 ml-14">
+                  <div className="mt-4 sm:ml-14">
                     {/* Admin note input */}
                     {(approvingId === deposit.id || rejectingId === deposit.id) && (
                       <div className="mb-3">
@@ -165,7 +167,7 @@ export default function AdminDeposits() {
                       </div>
                     )}
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {approvingId === deposit.id ? (
                         <>
                           <button
@@ -174,7 +176,7 @@ export default function AdminDeposits() {
                             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent-green text-black text-sm font-semibold hover:opacity-90 transition-opacity"
                           >
                             {approveMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                            Confirm Approve
+                            Confirm
                           </button>
                           <button
                             onClick={() => { setApprovingId(null); setAdminNote('') }}
@@ -191,7 +193,7 @@ export default function AdminDeposits() {
                             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent-rose text-white text-sm font-semibold hover:opacity-90 transition-opacity"
                           >
                             {rejectMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
-                            Confirm Reject
+                            Confirm
                           </button>
                           <button
                             onClick={() => { setRejectingId(null); setAdminNote('') }}
@@ -204,13 +206,13 @@ export default function AdminDeposits() {
                         <>
                           <button
                             onClick={() => { setApprovingId(deposit.id); setRejectingId(null); setAdminNote('') }}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent-green/10 hover:bg-accent-green/20 text-accent-green text-sm font-medium transition-colors"
+                            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-accent-green/10 hover:bg-accent-green/20 text-accent-green text-sm font-medium transition-colors"
                           >
                             <CheckCircle size={14} /> Approve
                           </button>
                           <button
                             onClick={() => { setRejectingId(deposit.id); setApprovingId(null); setAdminNote('') }}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent-rose/10 hover:bg-accent-rose/20 text-accent-rose text-sm font-medium transition-colors"
+                            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-accent-rose/10 hover:bg-accent-rose/20 text-accent-rose text-sm font-medium transition-colors"
                           >
                             <XCircle size={14} /> Reject
                           </button>

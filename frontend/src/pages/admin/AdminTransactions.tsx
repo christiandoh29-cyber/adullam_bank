@@ -43,13 +43,13 @@ export default function AdminTransactions() {
 
   return (
     <div className="space-y-5 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h1 className="text-white text-2xl font-bold">All Transactions</h1>
           <p className="text-surface-400 text-sm mt-1">Platform-wide transaction history</p>
         </div>
         {pagination && (
-          <span className="text-surface-400 text-sm">{pagination.total} transactions</span>
+          <span className="text-surface-400 text-xs sm:text-sm">{pagination.total} transactions</span>
         )}
       </div>
 
@@ -104,13 +104,15 @@ export default function AdminTransactions() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-white text-xs font-medium">{tx.type.replace(/_/g, ' ')}</p>
+                      <p className="text-white text-xs sm:text-sm font-medium">{tx.type.replace(/_/g, ' ')}</p>
                       <span className={`badge ${getStatusBadge(tx.status)}`}>{tx.status}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-surface-500 text-xs mt-0.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2 text-surface-500 text-xs mt-0.5">
                       <span>{formatDateTime(tx.createdAt)}</span>
-                      {from && <><span>·</span><span>{from.firstName} {from.lastName}</span></>}
-                      {to && <><span>→</span><span>{to.firstName} {to.lastName}</span></>}
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {from && <><span>{from.firstName} {from.lastName}</span></>}
+                        {to && <><span>→ {to.firstName} {to.lastName}</span></>}
+                      </div>
                     </div>
                     <p className="text-surface-600 text-xs font-mono truncate">{tx.reference}</p>
                   </div>

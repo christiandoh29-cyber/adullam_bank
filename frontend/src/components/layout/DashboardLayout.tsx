@@ -63,7 +63,7 @@ function Sidebar({ user, onClose, onLogout }: SidebarProps) {
             <div className="pt-4 pb-2">
               <p className="text-surface-600 text-xs font-semibold uppercase tracking-wider px-4">Admin</p>
             </div>
-            <NavLink to="/admin" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <NavLink to="/admin" onClick={onClose} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <Shield size={18} />
               Admin Panel
             </NavLink>
@@ -163,7 +163,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

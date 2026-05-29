@@ -245,21 +245,18 @@ export default function TransactionsPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-white text-sm font-medium truncate">
+                      <p className="text-white text-xs sm:text-sm font-medium truncate">
                         {tx.description || tx.type.replace(/_/g, ' ')}
                       </p>
-                      <span className={`badge text-xs ${getStatusBadge(tx.status)}`}>{tx.status}</span>
+                      <span className={`badge text-xs flex-shrink-0 ${getStatusBadge(tx.status)}`}>{tx.status}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-surface-500 text-xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2 text-surface-500 text-xs">
                       <span>{formatDateTime(tx.createdAt)}</span>
                       {counterparty && (
-                        <>
-                          <span>·</span>
-                          <span>{counterparty.firstName} {counterparty.lastName}</span>
-                        </>
+                        <span className="truncate max-w-[120px] sm:max-w-none">
+                          · {counterparty.firstName} {counterparty.lastName}
+                        </span>
                       )}
-                      <span>·</span>
-                      <span className="font-mono">{tx.reference}</span>
                     </div>
                   </div>
 
