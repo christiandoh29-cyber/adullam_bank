@@ -59,6 +59,7 @@ authRouter.post('/register', authLimiter, async (req: Request, res: Response, ne
         firstName: data.firstName,
         lastName: data.lastName,
         phone: data.phone,
+        isEmailVerified: true,
         emailVerifyToken: verifyToken,
         accounts: {
           create: {
