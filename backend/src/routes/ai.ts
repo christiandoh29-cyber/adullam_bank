@@ -12,7 +12,7 @@ const chatSchema = z.object({
   agent: z.enum(['accountant', 'account-manager']).default('accountant'),
 })
 
-aiRouter.post('/chat', async (req: Request, res: Response, next: NextFunction) => {
+aiRouter.post('/chat', async (req: Request, res: Response, _next: NextFunction) => {
   try {
     const { message, agent: agentType } = chatSchema.parse(req.body)
     const userId = req.user!.userId
@@ -36,7 +36,7 @@ aiRouter.post('/chat', async (req: Request, res: Response, next: NextFunction) =
 
     res.write(`data: ${JSON.stringify({ type: 'done', agent: agentType })}\n\n`)
     res.end()
-  } catch (err) {
+  } catch (_err) {
     if (!res.headersSent) {
       res.write(`data: ${JSON.stringify({ type: 'error', message: 'Request failed' })}\n\n`)
       res.end()
